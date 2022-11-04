@@ -1,3 +1,4 @@
+import copy
 import os
 import requests
 import re
@@ -63,6 +64,7 @@ remove_after = ["Wikipedia", "See also", "Other forms"]
 remove_hiragana = [
     "<ruby class=\"furigana-justify\"><rb>",
     "</rt></ruby>\n",
+    "</rt></ruby>",
     "</rb><rt>",
     '        '
 ]
@@ -78,130 +80,184 @@ def create_dir(path):
 root_dir = "./data/"
 url_base = 'https://jisho.org/search/%20%23words%20%23jlpt-n1%20%23adjective?page='
 
+url_base = 'https://jisho.org/search/%23words%20%23jlpt-n1?page='
+
 # kanken_kyu =
 
 columns = kanken_kanjis.columns
+word_list = []
+is_noun_list = []
+is_suru_verb_list = []
+is_na_adj_list = []
+is_i_adj_list = []
+is_taru_adj_list = []
+is_undertemined_list = []
+is_adverb_list = []
+is_rentaishi_list = []
+definition_list = []
+is_verb_list = []
+hiragana_list = []
+isLastUrl = False
+count = 0
+while not isLastUrl:
 
-for kyu in columns:
-    kanji_list = kanken_kanjis[kyu].dropna().tolist()
+    count += 1
+    url = url_base + str(count)
 
+    page = requests.get(url)
 
+    lines = page.text.splitlines()
 
-    for kanji in kanji_list:
+    path = "./data/test_common" + str(count)
+    with open(path, 'wb+') as f:
+        f.write(page.content)
 
-        isLastUrl = False
-        count = 0
+    with open(path) as f:
+        lines = f.readlines()
 
-        while not isLastUrl:
+    if "Sorry, couldn't find anything matching" in lines[593]:
+        isLastUrl = True
 
-            count += 1
-            all_common = url_base + str(count)
+    else:
+        print(count)
 
-            print(all_common)
+        for i, l in enumerate(lines):
 
-            page = requests.get(all_common)
+            if entry_identifier1 in l:
+                word = lines[i + 7]
+                hiragana = lines[i + 4]
+                hiragana = re.sub(string_to_remove, '', hiragana)
+                hiragana = hiragana.replace('        ', '')
 
-            lines = page.text.splitlines()
+                for h in remove_hiragana:
+                    hiragana = hiragana.replace(h, '')
 
-            path = "./data/test_common" + str(count)
-            with open(path, 'wb+') as f:
-                f.write(page.content)
+                hiragana = hiragana.split("</span>")
 
-            with open(path) as f:
-                lines = f.readlines()
+                # print(hiragana)
 
-            STOP
+                hiragana = [y for y in hiragana if y not in ["<span>", '\n', ""]]
 
-            if "Sorry, couldn't find anything matching" in lines[593]:
-                isLastUrl = True
+                word = word.replace('        ', '')
+                word = word.replace('\n', '')
+                word = word.replace('<span>', '')
+                word = word.replace('</span>', '')
 
-            else:
-                print(count)
+                print(word)
 
-                for i, l in enumerate(lines):
+            if entry_identifier2 in l:
+                description_line = copy.copy(l)
 
-                    if entry_identifier1 in l:
-                        word = lines[i + 7]
-                        hiragana = lines[i + 4]
-                        hiragana = re.sub(string_to_remove, '', hiragana)
-                        hiragana = hiragana.replace('        ', '')
+            if definition_identifier in l:
 
-                        for h in remove_hiragana:
-                            hiragana = hiragana.replace(h, '')
+                definition = lines[i + 1]
 
-                        hiragana = hiragana.split("</span>")
+                # print(description_line)
+                # print(definition)
 
-                        # print(hiragana)
+                if "JLPT N1" in description_line:
 
-                        hiragana = [y for y in hiragana if y not in ["<span>", '\n', ""]]
+                    if "Noun" in definition:
+                        is_noun = True
+                    else:
+                        is_noun = False
+                    is_noun_list.append(is_noun)
 
-                        word = word.replace('        ', '')
-                        word = word.replace('\n', '')
-                        word = word.replace('<span>', '')
-                        word = word.replace('</span>', '')
+                    if "Suru verb" in definition:
+                        is_suru_verb = True
+                    else:
+                        is_suru_verb = False
+                    is_suru_verb_list.append(is_suru_verb)
 
-                        print(kyu, word)
+                    if not is_suru_verb and "verb" in definition:
+                        is_verb = True
+                    else:
+                        is_verb = False
+                    is_verb_list.append(is_suru_verb)
 
-                    if entry_identifier2 in l:
+                    if "Na-adjective" in definition:
+                        is_na_adj = True
+                    else:
+                        is_na_adj = False
+                    is_na_adj_list.append(is_na_adj)
 
-                        if "JLPT N1" in l and "adjective" in l:
+                    if "I-adjective" in definition:
+                        is_i_adj = True
+                    else:
+                        is_i_adj = False
+                    is_i_adj_list.append(is_i_adj)
 
-                            if "I-adjective" in l:
-                                type_ = "i-adj"
+                    if """'taru' adjective""" in definition:
+                        is_taru_adj = True
+                    else:
+                        is_taru_adj = False
+                    is_taru_adj_list.append(is_taru_adj)
 
-                            elif "Noun" in l:
-                                type_ = "noun"
+                    if "Adverb" in definition:
+                        is_adverb = True
+                    else:
+                        is_adverb = False
+                    is_adverb_list.append(is_taru_adj)
 
-                            elif "Na-adjective" in l:
-                                type_ = "na-adj"
-                            else:
-                                type_ = None
+                    if "rentaishi" in definition:
+                        is_rentaishi = True
+                    else:
+                        is_rentaishi = False
+                    is_rentaishi_list.append(is_rentaishi)
 
-                        dict_ = dict()
+                    if not is_noun and not is_suru_verb and not is_na_adj and not is_i_adj and not is_taru_adj and not \
+                            is_adverb and not is_rentaishi and not is_verb:
 
-                        dict_[""]
+                        is_undertemined_list.append(True)
+                    else:
+                        is_undertemined_list.append(False)
 
-                    # if definition_identifier in l:
-                    #     definition = lines[i + 1]
-                    #     definition = re.sub(r'\<(.+?)\>', '', definition)
-                    #     definition = definition.replace("&#8203", '')
-                    #
-                    #     for r in remove_after:
-                    #         if r in definition:
-                    #             definition = definition.split(r)
-                    #             definition.pop(-1)
-                    #             definition = ''.join(definition)
-                    #
-                    #     # print(definition)
-                    #
-                    #     for w in remove_list:
-                    #         definition = definition.replace(w, '')
-                    #     definition = definition.replace("&#39;", "'")
-                    #
-                    #     definitions_list = re.split("""[0-9]\. """, definition)
-                    #
-                    #     for s in remove_from_split_string:
-                    #         if s in definitions_list:
-                    #             definitions_list.remove(s)
-                    #
-                    #     # print(definitions_list)
-                    #     if hiragana:
-                    #         if kanji in word:
-                    #             entry_dict = dict()
-                    #             entry_dict["hiragana"] = hiragana
-                    #             entry_dict["english"] = definitions_list
-                    #             entry_dict["kanken_kyu"] = kyu
-                    #
-                    #             common_words[word] = entry_dict
+                    definition = re.sub(r'\<(.+?)\>', '', definition)
+                    definition = definition.replace("&#8203", '')
 
-    # with open(os.path.join('./data', 'common_' + kyu + '.json'), 'w') as fp:
-    #     json.dump(common_words, fp)
-    # fp.close()
+                    for r in remove_after:
+                        if r in definition:
+                            definition = definition.split(r)
+                            definition.pop(-1)
+                            definition = ''.join(definition)
 
-###############################################################################
-# SAVE A DICTIONARY
+                    # print(definition)
 
+                    for w in remove_list:
+                        definition = definition.replace(w, '')
+                    definition = definition.replace("&#39;", "'")
 
+                    definitions_list = re.split("""[0-9]\. """, definition)
 
+                    for s in remove_from_split_string:
+                        if s in definitions_list:
+                            definitions_list.remove(s)
 
-###############################################################################
+                    # print(definitions_list)
+                    word_list.append(word)
+                    definition_list.append(definition)
+
+                    if hiragana:
+                        hiragana_list.append( '・'.join(hiragana))
+                    else:
+                        hiragana_list.append(None)
+
+                    d = {
+                        'word': word_list,
+                        'hiragana': hiragana_list,
+                        'noun': is_noun_list,
+                        'suru-verb': is_suru_verb_list,
+                        'na-adj': is_na_adj_list,
+                        'i-adj': is_i_adj_list,
+                        'taru-adj': is_taru_adj_list,
+                        'adv.': is_taru_adj_list,
+                        'rentaishi': is_rentaishi,
+                        'verb': is_verb_list,
+                        'undet.': is_undertemined_list,
+                        'definition': definition_list
+                    }
+
+                    df = pd.DataFrame(data=d)
+                    df.to_csv(os.path.join('./data', 'jlpt_adj_noun.csv'), index=False)
+print("*" * 20)
+print("DONE")

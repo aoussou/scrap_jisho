@@ -96,6 +96,7 @@ is_adverb_list = []
 is_rentaishi_list = []
 definition_list = []
 is_verb_list = []
+is_onoma_list = []
 hiragana_list = []
 isLastUrl = False
 count = 0
@@ -199,6 +200,12 @@ while not isLastUrl:
                         is_adverb = False
                     is_adverb_list.append(is_taru_adj)
 
+                    if "Onomatopoeic" in definition or "mimetic" in definition:
+                        is_onoma = True
+                    else:
+                        is_onoma = False
+                    is_onoma_list.append(is_onoma)
+
                     if "rentaishi" in definition:
                         is_rentaishi = True
                     else:
@@ -206,7 +213,7 @@ while not isLastUrl:
                     is_rentaishi_list.append(is_rentaishi)
 
                     if not is_noun and not is_suru_verb and not is_na_adj and not is_i_adj and not is_taru_adj and not \
-                            is_adverb and not is_rentaishi and not is_verb:
+                            is_adverb and not is_rentaishi and not is_verb and not is_onoma:
 
                         is_undertemined_list.append(True)
                     else:
@@ -253,6 +260,7 @@ while not isLastUrl:
                         'adv.': is_taru_adj_list,
                         'rentaishi': is_rentaishi,
                         'verb': is_verb_list,
+                        'onoma': is_onoma_list,
                         'undet.': is_undertemined_list,
                         'definition': definition_list
                     }

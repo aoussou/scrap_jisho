@@ -1,5 +1,7 @@
 import copy
 import os
+from itertools import compress
+
 import requests
 import re
 import pandas as pd
@@ -81,6 +83,23 @@ def create_dir(path):
         os.makedirs(path)
 
 
+def create_sub_dict(
+        word_list,
+        hiragana_list,
+        jlpt_level_list,
+        definition_list,
+        selection_list
+):
+    d = {
+        'word': list(compress(word_list, selection_list)),
+        'hiragana': list(compress(hiragana_list, selection_list)),
+        'jlpt': list(compress(jlpt_level_list, selection_list)),
+        'definition': list(compress(definition_list, selection_list))
+    }
+
+    return d
+
+
 ###############################################################################
 root_dir = "./data/"
 
@@ -102,21 +121,22 @@ definition_list = []
 is_verb_list = []
 jlpt_level_list = []
 hiragana_list = []
+is_onoma_list = []
 
 isLastUrl = False
 count = 0
 while not isLastUrl:
 
     count += 1
-    url = url_base + str(count)
+    # url = url_base + str(count)
+    #
+    # page = request_session.get(url)
 
-    page = request_session.get(url)
+    # lines = page.text.splitlines()
 
-    lines = page.text.splitlines()
-
-    path = "./data/test_common" + str(count)
-    with open(path, 'wb+') as f:
-        f.write(page.content)
+    path = "./data/all_common_pages/test_common" + str(count)
+    # with open(path, 'wb+') as f:
+    #     f.write(page.content)
 
     with open(path) as f:
         lines = f.readlines()
@@ -149,7 +169,7 @@ while not isLastUrl:
                 word = word.replace('<span>', '')
                 word = word.replace('</span>', '')
 
-                print(word)
+                # print(word)
 
             if entry_identifier2 in l:
                 description_line = copy.copy(l)
@@ -189,7 +209,7 @@ while not isLastUrl:
                     is_suru_verb = False
                 is_suru_verb_list.append(is_suru_verb)
 
-                if not is_suru_verb and " verb" in definition:
+                if not is_suru_verb and ("Ichidan" in definition or "Godan" in definition):
                     is_verb = True
                 else:
                     is_verb = False
@@ -219,6 +239,12 @@ while not isLastUrl:
                     is_adverb = False
                 is_adverb_list.append(is_adverb)
 
+                if "Onomatopoeic" in definition or "mimetic" in definition:
+                    is_onoma = True
+                else:
+                    is_onoma = False
+                is_onoma_list.append(is_onoma)
+
                 if "rentaishi" in definition:
                     is_rentaishi = True
                 else:
@@ -226,7 +252,7 @@ while not isLastUrl:
                 is_rentaishi_list.append(is_rentaishi)
 
                 if not is_noun and not is_suru_verb and not is_na_adj and not is_i_adj and not is_taru_adj and not \
-                        is_adverb and not is_rentaishi and not is_verb:
+                        is_adverb and not is_rentaishi and not is_verb and not is_onoma:
 
                     is_undertemined_list.append(True)
                 else:
@@ -262,7 +288,7 @@ while not isLastUrl:
                 else:
                     hiragana_list.append(None)
 
-                d = {
+                d_all = {
                     'word': word_list,
                     'hiragana': hiragana_list,
                     'jlpt': jlpt_level_list,
@@ -274,12 +300,116 @@ while not isLastUrl:
                     'adv.': is_adverb_list,
                     'rentaishi': is_rentaishi,
                     'verb': is_verb_list,
+                    'onoma': is_onoma_list,
                     'undet.': is_undertemined_list,
                     'definition': definition_list
                 }
 
-        df = pd.DataFrame(data=d)
-        df.to_csv(os.path.join('./data', 'jisho_all_common.csv'), index=False)
+                d_noun = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_noun_list
+                )
+
+                d_na_adj = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_na_adj_list
+                )
+
+                d_i_adj = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_i_adj_list
+                )
+
+                d_taru = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_taru_adj_list
+                )
+
+                d_adv = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_adverb_list
+                )
+
+                d_rentaishi = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_rentaishi_list
+                )
+
+                d_verb = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_verb_list
+                )
+
+                d_onoma = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_onoma_list
+                )
+
+                d_undet = create_sub_dict(
+                    word_list,
+                    hiragana_list,
+                    jlpt_level_list,
+                    definition_list,
+                    is_undertemined_list
+                )
+
+
+
+
+
+df_all = pd.DataFrame(data=d_all)
+df_all.to_csv(os.path.join('./data', 'jisho_all_common.csv'), index=False)
+
+df_verb = pd.DataFrame(data=d_verb)
+df_verb.to_csv(os.path.join('./data', 'jisho_all_common_verb.csv'), index=False)
+
+df_noun = pd.DataFrame(data=d_noun)
+df_noun.to_csv(os.path.join('./data', 'jisho_all_common_noun.csv'), index=False)
+
+df_onoma = pd.DataFrame(data=d_onoma)
+df_onoma.to_csv(os.path.join('./data', 'jisho_all_common_onoma.csv'), index=False)
+
+df_i_adj = pd.DataFrame(data=d_i_adj)
+df_i_adj.to_csv(os.path.join('./data', 'jisho_all_common_i_adj.csv'), index=False)
+
+df_na_adj = pd.DataFrame(data=d_na_adj)
+df_na_adj.to_csv(os.path.join('./data', 'jisho_all_common_na_adj.csv'), index=False)
+
+df_taru_adj = pd.DataFrame(data=d_taru)
+df_taru_adj.to_csv(os.path.join('./data', 'jisho_all_common_taru_adj.csv'), index=False)
+
+df_adv = pd.DataFrame(data=d_adv)
+df_adv.to_csv(os.path.join('./data', 'jisho_all_common_adv.csv'), index=False)
+
+df_rentaishi = pd.DataFrame(data=d_rentaishi)
+df_rentaishi.to_csv(os.path.join('./data', 'jisho_all_common_rentaishi.csv'), index=False)
+
+df_undet = pd.DataFrame(data=d_undet)
+df_undet.to_csv(os.path.join('./data', 'jisho_all_common_undet.csv'), index=False)
 
 print("*" * 20)
 print("DONE")

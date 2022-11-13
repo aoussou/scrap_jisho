@@ -86,40 +86,8 @@ def create_dir(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
-
-def get_jotoba(word):
-    URL = "https://jotoba.de/api/search/words"
-
-    headers = {
-        'Accept': 'application/json',
-        # Already added when you pass json=
-        # 'Content-Type': 'application/json',
-    }
-
-    json_data = {
-        'query': word,
-        'language': 'English',
-        'no_english': False,
-    }
-
-    response = requests.post(url=URL, headers=headers, json=json_data).json()
-
-    words = response["words"]
-    word0 = words[0]
-    kana = word0["reading"]["kana"]
-    senses = word0["senses"]
-    explanations = ""
-
-    count = 0
-    for s in senses:
-        count += 1
-        explanations += str(count) + str(". ") + '; '.join(s["glosses"]) + "\n"
-
-
-    if count == 1:
-        explanations = explanations.replace(str(count) + str(". "), "")
-
-    return kana, explanations
+def find_2nd_substring_index(string, substring):
+   return string.find(substring, string.find(substring) + 1)
 
 def create_sub_dict(
         word_list,
@@ -192,6 +160,13 @@ while not isLastUrl:
 
             if entry_identifier1 in l:
                 word = lines[i + 7]
+                word = word.replace('        ', '')
+                word = word.replace('\n', '')
+                word = word.replace('<span>', '')
+                word = word.replace('</span>', '')
+
+
+
                 furigana = lines[i + 4]
                 furigana = re.sub(string_to_remove, '', furigana)
                 furigana = furigana.replace('        ', '')
@@ -216,10 +191,7 @@ while not isLastUrl:
 
 
 
-                word = word.replace('        ', '')
-                word = word.replace('\n', '')
-                word = word.replace('<span>', '')
-                word = word.replace('</span>', '')
+
 
                 # print(word)
 
@@ -230,13 +202,14 @@ while not isLastUrl:
 
                 definition = lines[i + 1]
 
-                # print(description_line)
-                # print(definition)
-                # if "【" in definition:
-                #     # print(definition)
-                #     i_start = definition.find("【")
-                #     i_end = definition.find("】")
-                #     hiragana_char_list = definition[i_start+1:i_end]
+                if set(list(word)).issubset(hiragana_char_list):
+                    kana = copy.copy(word)
+                else:
+                    start_identifier = """Sentence search for """
+                    i_start = find_2nd_substring_index(description_line,start_identifier) + len(start_identifier)
+                    end_identifier = """</a></li><li><a href="/search/"""
+                    i_end = find_2nd_substring_index(description_line, end_identifier)
+                    kana = description_line[i_start:i_end]
 
 
 
@@ -317,15 +290,15 @@ while not isLastUrl:
                     is_usually_kana = 0
                 is_usually_kana_list.append(is_usually_kana)
 
-                try:
-                    if not is_usually_kana:
-                        _, jotoba_definition = get_jotoba(word)
-                    else:
-                        _, jotoba_definition = get_jotoba(hiragana)
-                except:
-                    jotoba_definition = ""
+                # try:
+                #     if not is_usually_kana:
+                #         _, jotoba_definition = get_jotoba(word)
+                #     else:
+                #         _, jotoba_definition = get_jotoba(hiragana)
+                # except:
+                #     jotoba_definition = ""
 
-                print(jotoba_definition)
+                # print(jotoba_definition)
 
                 if not is_noun and not is_suru_verb and not is_na_adj and not is_i_adj and not is_taru_adj and not \
                         is_adverb and not is_rentaishi and not is_verb and not is_onoma:
@@ -357,7 +330,7 @@ while not isLastUrl:
 
                 # print(definitions_list)
                 word_list.append(word)
-                definition_list.append(jotoba_definition)
+                definition_list.append("")
 
                 if furigana:
                     hiragana_list.append(hiragana)

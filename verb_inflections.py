@@ -1,7 +1,6 @@
 verb = "飛ぶ"
 type = "godan"
 
-
 stem_dict = dict()
 
 u_dict = dict()
@@ -53,7 +52,6 @@ bu_dict["e"] = "べ"
 bu_dict["te"] = "んで"
 bu_dict["past"] = "んだ"
 
-
 mu_dict = dict()
 mu_dict["i"] = "み"
 mu_dict["a"] = "ま"
@@ -76,7 +74,6 @@ id_dict["te"] = "て"
 id_dict["past"] = "た"
 id_dict["imperative"] = "ろ"
 
-
 endings_dict = dict()
 endings_dict["う"] = u_dict
 endings_dict["く"] = ku_dict
@@ -89,9 +86,8 @@ endings_dict["む"] = mu_dict
 endings_dict["る"] = ru_dict
 endings_dict["id"] = id_dict
 
-def get_endings(verb,is_ichidan):
 
-
+def get_endings(verb, is_ichidan):
     if is_ichidan:
         endings = endings_dict["id"]
     else:
@@ -100,21 +96,28 @@ def get_endings(verb,is_ichidan):
 
     return endings
 
-godan_verb_list = ["失う","聴く","泳ぐ","話す","立つ","死ぬ","選ぶ","好む","喋る"]
 
-for verb in godan_verb_list:
-
-    endings = get_endings(verb,False)
-
-    print("*"*10)
-    print("verb",verb)
-    for v,k in endings.items():
-        print(v,verb[:-1] + k)
+# godan_verb_list = ["失う", "聴く", "泳ぐ", "話す", "立つ", "死ぬ", "選ぶ", "好む", "喋る"]
 
 
+def get_forms(verb, is_ichidan):
+
+    forms_dict = dict()
+
+    endings = get_endings(verb, is_ichidan)
+    for v, k in endings.items():
+        forms_dict[v] = verb[:-1] + k
+        # all_forms.append(verb[:-1] + k)
+
+    return forms_dict
 
 
-
-
-
-
+# for verb in godan_verb_list:
+#
+#     endings = get_endings(verb, False)
+#
+#
+#     print("*" * 10)
+#     print("verb", verb)
+#     for v, k in endings.items():
+#         print(v, verb[:-1] + k)

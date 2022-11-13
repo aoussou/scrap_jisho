@@ -23,6 +23,8 @@ def get_kana(word):
     kana = word0["reading"]["kana"]
 
     return kana
+
+
 df_adverbs = pd.read_csv('./data/adverbs.csv')
 
 word_list = df_adverbs["word"]

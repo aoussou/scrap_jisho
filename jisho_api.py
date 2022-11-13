@@ -7,7 +7,7 @@ import time
 request_session = requests.Session()
 
 
-hiragana = pd.read_csv("./data/hiragana.csv", header=None)
+hiragana = pd.read_csv("./data/kana_list.csv", header=None)
 hiragana_char_list = list(hiragana.iloc[:, 0])
 
 def get_jisho_api_response(word,path):
@@ -92,7 +92,7 @@ def get_sentences_page1(word,forms,path):
 
 
 
-    furigana = pd.read_csv("./data/hiragana.csv", header=None)
+    furigana = pd.read_csv("./data/kana_list.csv", header=None)
     hiragana_char_list = list(furigana.iloc[:, 0])
 
     furigana_span = """<span\s+class\="furigana">(?:(?!</span>)(?:.|\n))*</span>"""

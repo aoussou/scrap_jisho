@@ -11,14 +11,14 @@ u_dict["te"] = "って"
 u_dict["past"] = "った"
 
 ku_dict = dict()
-ku_dict["i"] = "く"
+ku_dict["i"] = "き"
 ku_dict["a"] = "か"
 ku_dict["e"] = "け"
 ku_dict["te"] = "いて"
 ku_dict["past"] = "いた"
 
 gu_dict = dict()
-gu_dict["i"] = "ぐ"
+gu_dict["i"] = "ぎ"
 gu_dict["a"] = "が"
 gu_dict["e"] = "げ"
 gu_dict["te"] = "いで"

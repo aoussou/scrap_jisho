@@ -21,6 +21,10 @@ data_jlpt = df_data["jlpt"]
 
 sentences_dict = dict()
 
+# forms = get_forms("まく", False)
+# print(forms)
+# STOP
+
 for i, word in enumerate(data_words):
 
     if data_is_usually_hira[i]:

@@ -98,42 +98,55 @@ endings_dict["る"] = ru_dict
 # endings_dict["id"] = id_dict
 
 
-def get_endings(verb, is_ichidan):
+def get_forms(verb, is_ichidan):
     forms = dict()
     stem = verb[:-1]
 
     if is_ichidan:
-        forms["dictionary"] = verb
+
         forms["te"] = stem + "て"
         forms["past"] = stem + "た"
         forms["negative"] = stem + "な"
         forms["negative-old"] = stem + "ぬ"
         forms["negative-continous"] = stem + "ず"
-        forms["masu-form"] = stem
+
         forms["masu"] = stem + "ま"
         forms["volitional"] = stem + "よう"
         forms["imperative"] = stem + "ろ"
-        forms["potential"] = stem + "られ"
-        forms["passive"] = stem + "られ"
+
         forms["hypothetical"] = stem + "れば"
+
+        forms["passive"] = stem + "られ"
+
+        forms["dictionary"] = verb
+        forms["masu-form"] = stem
+        forms["potential"] = stem + "られ"
+
+
 
 
     else:
         endings = endings_dict[verb[-1]]
 
-        forms["dictionary"] = verb
         forms["te"] = stem + endings["te"]
         forms["past"] = stem + endings["past"]
         forms["negative"] = stem + endings["a-form"] + "な"
         forms["negative-old"] = stem + endings["a-form"] + "ぬ"
         forms["negative-continous"] = stem + endings["a-form"] + "ず"
-        forms["masu-form"] = stem + endings["i-form"]
         forms["masu"] = stem + endings["i-form"] + "ま"
         forms["volitional"] = stem + endings["o-form"] + "う"
-        forms["imperative"] = stem + endings["e-form"]
+        forms["passive"] = stem + endings["a-form"] + "れ"
+        forms["hypothetical"] = stem + endings["e-form"] + "ば"
+
+        forms["masu-form"] = stem + endings["i-form"]
         forms["potential"] = stem + endings["e-form"]
-        forms["passive"] = endings["a-form"] + "れ"
-        forms["hypothetical"] = endings["e-form"] + "ば"
+
+
+        forms["imperative"] = stem + endings["e-form"]
+
+        forms["dictionary"] = verb
+
+
 
     return forms
 
@@ -141,16 +154,6 @@ def get_endings(verb, is_ichidan):
 # godan_verb_list = ["失う", "聴く", "泳ぐ", "話す", "立つ", "死ぬ", "選ぶ", "好む", "喋る"]
 
 
-def get_forms(verb, is_ichidan):
-
-    forms_dict = dict()
-
-    endings = get_endings(verb, is_ichidan)
-    for v, k in endings.items():
-        forms_dict[v] = verb[:-1] + k
-        # all_forms.append(verb[:-1] + k)
-
-    return forms_dict
 
 
 # for verb in godan_verb_list:

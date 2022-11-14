@@ -72,7 +72,7 @@ def get_jisho_data(word, reading, path):
 
             return dict_
 
-def get_sentences_page1(word,reading = None, forms=None,path="None"):
+def get_sentences_page1(word, reading = None, kana_forms=None, path="None"):
 
     english_identifier = """<span class="english">"""
 
@@ -142,9 +142,9 @@ def get_sentences_page1(word,reading = None, forms=None,path="None"):
         if english_identifier in l:
             english = l
 
-            if forms is not None:
+            if kana_forms is not None:
 
-                for form, inflected_verb in forms.items():
+                for form, inflected_verb in kana_forms.items():
 
                     if inflected_verb in hiragana_sentence:
 
@@ -154,6 +154,7 @@ def get_sentences_page1(word,reading = None, forms=None,path="None"):
                         sentence_list.append(kanji_sentence)
                         english_list.append(english)
                         form_list.append(form)
+
                         break
 
             else:

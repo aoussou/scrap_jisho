@@ -16,12 +16,12 @@ retries = Retry(total=10, backoff_factor=1, status_forcelist=[429, 502, 503, 504
 
 common_words = dict()
 
-furigana = pd.read_csv("./data/hiragana.csv", header=None)
+furigana = pd.read_csv("./data/kana_list.csv", header=None)
 hiragana_char_list = list(furigana.iloc[:, 0])
 
 ##############################################################################
 entry_identifier1 = """<div class="concept_light clearfix">"""
-entry_identifier2 = """<span class="concept_light-tag concept_light-common success label">"""
+entry_identifier2 = """<span class="concept_light-tag label">JLPT"""
 
 definition_identifier = """<div class="concept_light-meanings medium-9 columns">"""
 
@@ -87,54 +87,24 @@ def create_dir(path):
         os.makedirs(path)
 
 
-def get_jotoba(word):
-    URL = "https://jotoba.de/api/search/words"
+def find_2nd_substring_index(string, substring):
+    return string.find(substring, string.find(substring) + 1)
 
-    headers = {
-        'Accept': 'application/json',
-        # Already added when you pass json=
-        # 'Content-Type': 'application/json',
-    }
-
-    json_data = {
-        'query': word,
-        'language': 'English',
-        'no_english': False,
-    }
-
-    response = requests.post(url=URL, headers=headers, json=json_data).json()
-
-    words = response["words"]
-    word0 = words[0]
-    kana = word0["reading"]["kana"]
-    senses = word0["senses"]
-    explanations = ""
-
-    count = 0
-    for s in senses:
-        count += 1
-        explanations += str(count) + str(". ") + '; '.join(s["glosses"]) + "\n"
-
-
-    if count == 1:
-        explanations = explanations.replace(str(count) + str(". "), "")
-
-    return kana, explanations
 
 def create_sub_dict(
         word_list,
         hiragana_list,
         is_usually_kana_list,
         jlpt_level_list,
-        definition_list,
-        selection_list
+        selection_list,
+        page_list
 ):
     d = {
         'word': list(compress(word_list, selection_list)),
         'is_usually_kana': list(compress(is_usually_kana_list, selection_list)),
         'hiragana': list(compress(hiragana_list, selection_list)),
         'jlpt': list(compress(jlpt_level_list, selection_list)),
-        'definition': list(compress(definition_list, selection_list))
+        'page': list(compress(page_list, selection_list)),
     }
 
     return d
@@ -142,9 +112,9 @@ def create_sub_dict(
 
 ###############################################################################
 root_dir = "./data/"
-save_dir = os.path.join(root_dir, "n2")
+save_dir = os.path.join(root_dir, "n1")
 save_dir_jisho_pages = os.path.join(save_dir, "jisho")
-url_base = 'https://jisho.org/search/%20%23jlpt-n2%20%23words?page='
+url_base = 'https://jisho.org/search/%20%23jlpt-n1%20%23words?page='
 
 # kanken_kyu =
 
@@ -163,6 +133,7 @@ jlpt_level_list = []
 hiragana_list = []
 is_onoma_list = []
 is_usually_kana_list = []
+page_list = []
 
 isLastUrl = False
 count = 0
@@ -192,54 +163,28 @@ while not isLastUrl:
 
             if entry_identifier1 in l:
                 word = lines[i + 7]
-                furigana = lines[i + 4]
-                furigana = re.sub(string_to_remove, '', furigana)
-                furigana = furigana.replace('        ', '')
-
-                for h in remove_hiragana:
-                    furigana = furigana.replace(h, '')
-
-                furigana = list(furigana)
-
-
-                new_furigana = ""
-                for i, c in enumerate(furigana):
-
-                    if c in hiragana_char_list:
-                        new_furigana += c
-                hiragana = new_furigana
-
-
-                for c in word:
-                    if c in hiragana_char_list:
-                        hiragana += c
-
-
-
                 word = word.replace('        ', '')
                 word = word.replace('\n', '')
                 word = word.replace('<span>', '')
                 word = word.replace('</span>', '')
-
-                # print(word)
 
             if entry_identifier2 in l:
                 description_line = copy.copy(l)
 
             if definition_identifier in l:
 
+                if set(list(word)).issubset(hiragana_char_list):
+                    kana = copy.copy(word)
+                else:
+                    start_identifier = """Sentence search for """
+                    i_start = find_2nd_substring_index(description_line, start_identifier) + len(start_identifier)
+
+                    kana = description_line[i_start:]
+                    end_identifier = """</a></li><li>"""
+                    i_end = kana.find(end_identifier)
+                    kana = kana[:i_end]
+
                 definition = lines[i + 1]
-
-                # print(description_line)
-                # print(definition)
-                # if "【" in definition:
-                #     # print(definition)
-                #     i_start = definition.find("【")
-                #     i_end = definition.find("】")
-                #     hiragana_char_list = definition[i_start+1:i_end]
-
-
-
 
                 if "JLPT" in description_line:
                     if "N1" in description_line:
@@ -317,16 +262,6 @@ while not isLastUrl:
                     is_usually_kana = 0
                 is_usually_kana_list.append(is_usually_kana)
 
-                try:
-                    if not is_usually_kana:
-                        _, jotoba_definition = get_jotoba(word)
-                    else:
-                        _, jotoba_definition = get_jotoba(hiragana)
-                except:
-                    jotoba_definition = ""
-
-                print(jotoba_definition)
-
                 if not is_noun and not is_suru_verb and not is_na_adj and not is_i_adj and not is_taru_adj and not \
                         is_adverb and not is_rentaishi and not is_verb and not is_onoma:
 
@@ -357,12 +292,13 @@ while not isLastUrl:
 
                 # print(definitions_list)
                 word_list.append(word)
-                definition_list.append(jotoba_definition)
+                definition_list.append("")
 
-                if furigana:
-                    hiragana_list.append(hiragana)
+                if kana:
+                    hiragana_list.append(kana)
                 else:
                     hiragana_list.append(None)
+                page_list.append(path)
 
                 d_all = {
                     'word': word_list,
@@ -387,8 +323,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_noun_list
+                    is_noun_list,
+                    page_list
                 )
 
                 d_na_adj = create_sub_dict(
@@ -396,8 +332,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_na_adj_list
+                    is_na_adj_list,
+                    page_list
                 )
 
                 d_i_adj = create_sub_dict(
@@ -405,8 +341,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_i_adj_list
+                    is_i_adj_list,
+                    page_list
                 )
 
                 d_taru = create_sub_dict(
@@ -414,8 +350,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_taru_adj_list
+                    is_taru_adj_list,
+                    page_list
                 )
 
                 d_adv = create_sub_dict(
@@ -423,8 +359,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_adverb_list
+                    is_adverb_list,
+                    page_list
                 )
 
                 d_rentaishi = create_sub_dict(
@@ -432,8 +368,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_rentaishi_list
+                    is_rentaishi_list,
+                    page_list
                 )
 
                 d_verb = create_sub_dict(
@@ -441,8 +377,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_verb_list
+                    is_verb_list,
+                    page_list
                 )
 
                 d_onoma = create_sub_dict(
@@ -450,8 +386,8 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_onoma_list
+                    is_onoma_list,
+                    page_list
                 )
 
                 d_undet = create_sub_dict(
@@ -459,10 +395,9 @@ while not isLastUrl:
                     hiragana_list,
                     is_usually_kana_list,
                     jlpt_level_list,
-                    definition_list,
-                    is_undertemined_list
+                    is_undertemined_list,
+                    page_list
                 )
-
 
 df_all = pd.DataFrame(data=d_all)
 df_all.to_csv(os.path.join(save_dir, 'all.csv'), index=False)

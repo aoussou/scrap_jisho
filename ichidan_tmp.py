@@ -1,0 +1,10 @@
+id_dict = dict()
+id_dict["u-form"] = "る"
+id_dict["masu"] = ""
+id_dict["a-form"] = ""
+id_dict["potential"] = "られ"
+id_dict["volitional"] = "よう"
+id_dict["te"] = "て"
+id_dict["past"] = "た"
+id_dict["imperative"] = "ろ"
+id_dict["hypothetical"] = "れば"

@@ -1,48 +1,97 @@
-import os
-import re
+import copy
+
 import pandas as pd
-save_dir_jisho_pages = "./data/sentences/掻く #sentences - Jisho.org"
-path = os.path.join(save_dir_jisho_pages)
+import os
+from verb_inflections import get_forms
+from jisho_api import get_jisho_data, get_sentences_page1
+import json
 
-kanji_sentence_remove = [
-    """      """,
-    """\n""",
-    """<li class="clearfix">""",
-    """<span class="unlinked">""",
-    """</span>""",
-    """</li>""",
-    """<span class="unlinked">"""
-]
+root_dir = "./data/"
+save_dir_jisho_sentences = os.path.join(root_dir, "sentences")
+save_dir_jisho_api_data = os.path.join(root_dir, "api_data")
 
-furigana = pd.read_csv("./data/hiragana.csv", header=None)
-hiragana_char_list = list(furigana.iloc[:, 0])
+directory = os.path.join("./data")
 
-with open(path) as f:
-    lines = f.readlines()
-
-furigana_span = """<span\s+class\="furigana">(?:(?!</span>)(?:.|\n))*</span>"""
+type = "verbs"
+# file_path = os.path.join(directory, "i_adjs_processed.csv")
+# is_adj = True
 
 
+file_path = os.path.join(directory, type  + "_processed.csv")
+is_verb = True
+is_adj = False
 
-sentence_identifier = """<ul class="japanese_sentence japanese japanese_gothic clearfix" lang="ja">"""
-for i, l in enumerate(lines):
+df_data = pd.read_csv(file_path)
 
-    if sentence_identifier in l:
+data_words = df_data["word"]
+data_hiragana = df_data["hiragana"]
+data_is_usually_hira = df_data["is_usually_kana"]
+data_jlpt = df_data["jlpt"]
 
-        sentence_line = lines[i + 1]
-        print(sentence_line)
-        kanji_sentence = re.sub(furigana_span, '', sentence_line)
-        print(kanji_sentence)
+sentences_dict = dict()
+
+db_dict = dict()
+
+# forms = get_forms("まく", False)
+# print(forms)
+# STOP
+
+count = 0
+for i, word in enumerate(data_words):
+
+    if data_is_usually_hira[i]:
+
+        reading = data_hiragana[i]
+        jisho_data_path = os.path.join(save_dir_jisho_api_data, word) + ".json"
 
 
-        for exp in kanji_sentence_remove:
-            kanji_sentence = kanji_sentence.replace(exp, "")
-        print(kanji_sentence)
 
-        hiragana_sentence= ""
+        jisho_data = get_jisho_data(word, reading, jisho_data_path)
 
-        for c in sentence_line:
-            if c in hiragana_char_list:
-                hiragana_sentence += c
-        print(hiragana_sentence)
-        STOP
+        if is_verb:
+            kanji_forms = get_forms(word, jisho_data["is_ichidan"])
+            kana_forms = get_forms(reading, jisho_data["is_ichidan"])
+        else:
+            kana_forms = None
+
+
+        if is_adj:
+            reading = reading[:-1]
+
+        path = os.path.join(save_dir_jisho_sentences, word)
+        sentence_list, english_list, form_list = get_sentences_page1(
+            word,
+            reading=reading,
+            kana_forms=kana_forms,
+            path=path
+        )
+
+        if not sentence_list:
+            path = os.path.join(save_dir_jisho_sentences, reading)
+            sentence_list, english_list, form_list = get_sentences_page1(reading, reading=reading, kana_forms=kana_forms, path=path)
+
+        word_dict = copy.copy(jisho_data)
+
+        is_kana_list = []
+
+        for s_nbr, form in enumerate(form_list):
+            if kanji_forms[form] in sentence_list[s_nbr]:
+                is_kana_list.append(0)
+            else:
+                is_kana_list.append(1)
+
+        word_dict["japanese_sentences"] = sentence_list
+        word_dict["english_sentences"] = english_list
+        word_dict["verb_forms"] = form_list
+        word_dict["is_usually_kana"] = int(data_is_usually_hira[i])
+        word_dict["is_kana"] = is_kana_list
+        word_dict["jlpt"] = data_jlpt[i]
+        sentences_dict[count] = word_dict
+
+        count += 1
+
+
+
+with open(os.path.join('./data', type + '_sentences.json'), 'w') as fp:
+    json.dump(sentences_dict, fp)
+fp.close()

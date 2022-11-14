@@ -36,7 +36,7 @@ db_dict = dict()
 # print(forms)
 # STOP
 
-
+count = 0
 for i, word in enumerate(data_words):
 
     if data_is_usually_hira[i]:
@@ -86,7 +86,9 @@ for i, word in enumerate(data_words):
         word_dict["is_usually_kana"] = int(data_is_usually_hira[i])
         word_dict["is_kana"] = is_kana_list
         word_dict["jlpt"] = data_jlpt[i]
-        sentences_dict[word] = word_dict
+        sentences_dict[count] = word_dict
+
+        count += 1
 
 
 

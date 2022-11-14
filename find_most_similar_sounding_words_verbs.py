@@ -99,17 +99,17 @@ for i, w1 in enumerate(data_words):
                     dh = distance(w1, w2)
                     dr = distance(r1, r2)
                     # if dh < min(len(h1), len(h2)):
-                    inner_dict[hiragana_w2] = dr
+                    inner_dict[w2] = dr
 
         print(w1)
         sorted_dict = dict(sorted(inner_dict.items(), key=lambda x: x[1]))
         outer_dict[w1] = sorted_dict
 
         dict_["category"] = "ひらがな動詞"
-        dict_["question"] = "db_random"
+        dict_["question"] = "db_kana_verb"
         dict_["word"] = w1
-        dict_["answer"] = hiragana_w1
-        dict_["target"] = ""
+        dict_["answer"] = w1
+        dict_["target"] = hiragana_w1
         dict_["mca_list"] = list(sorted_dict.keys())[:10]
 
         db_dict[count] = dict_

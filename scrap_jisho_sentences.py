@@ -39,7 +39,7 @@ db_dict = dict()
 
 for i, word in enumerate(data_words):
 
-    # if data_is_usually_hira[i]:
+    if data_is_usually_hira[i]:
 
         reading = data_hiragana[i]
         jisho_data_path = os.path.join(save_dir_jisho_api_data, word) + ".json"
@@ -87,6 +87,8 @@ for i, word in enumerate(data_words):
         word_dict["is_kana"] = is_kana_list
         word_dict["jlpt"] = data_jlpt[i]
         sentences_dict[word] = word_dict
+
+
 
 with open(os.path.join('./data', type + '_sentences.json'), 'w') as fp:
     json.dump(sentences_dict, fp)

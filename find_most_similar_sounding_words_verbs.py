@@ -91,30 +91,32 @@ for i, w1 in enumerate(data_words):
                 jlpt_w2 = data_jlpt[j]
                 hiragana_w2 = data_hiragana[j]
                 is_usually_hira_w2 = data_is_usually_hira[j]
+                proceed = check_condition(jlpt_w2, is_usually_hira_w2)
 
-                # if len(h2) == 4:
-                r2 = get_romaji(w2)
-                dh = distance(w1, w2)
-                dr = distance(r1, r2)
-                # if dh < min(len(h1), len(h2)):
-                inner_dict[hiragana_w2] = dr
+                if proceed:
+                    # if len(h2) == 4:
+                    r2 = get_romaji(w2)
+                    dh = distance(w1, w2)
+                    dr = distance(r1, r2)
+                    # if dh < min(len(h1), len(h2)):
+                    inner_dict[hiragana_w2] = dr
 
         print(w1)
         sorted_dict = dict(sorted(inner_dict.items(), key=lambda x: x[1]))
         outer_dict[w1] = sorted_dict
 
         dict_["category"] = "ひらがな動詞"
-        dict_["question"] = "auto"
+        dict_["question"] = "db_random"
         dict_["word"] = w1
         dict_["answer"] = hiragana_w1
-        dict_["target"] = hiragana_w1
+        dict_["target"] = ""
         dict_["mca_list"] = list(sorted_dict.keys())[:10]
 
         db_dict[count] = dict_
 
         count += 1
 
-with open(os.path.join('./data', 'hiragana_verbs.json'), 'w') as fp:
+with open(os.path.join('./data', 'kana_verbs.json'), 'w') as fp:
     json.dump(db_dict, fp)
 fp.close()
 print("OK")

@@ -112,9 +112,9 @@ def create_sub_dict(
 
 ###############################################################################
 root_dir = "./data/"
-save_dir = os.path.join(root_dir, "n2")
+save_dir = os.path.join(root_dir, "n1")
 save_dir_jisho_pages = os.path.join(save_dir, "jisho")
-url_base = 'https://jisho.org/search/%20%23jlpt-n2%20%23words?page='
+url_base = 'https://jisho.org/search/%20%23jlpt-n1%20%23words?page='
 
 # kanken_kyu =
 

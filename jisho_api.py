@@ -64,16 +64,15 @@ def get_jisho_data(word, reading, path):
             dict_["reading"] = reading
             dict_["explanations"] = explanations
 
-            if "Ichidan" in senses[0]["parts_of_speech"][0]:
-                dict_["is_ichidan"] = 1
-            else:
-                dict_["is_ichidan"] = 0
+            if senses[0]["parts_of_speech"]:
+                if "Ichidan" in senses[0]["parts_of_speech"][0]:
+                    dict_["is_ichidan"] = 1
+                else:
+                    dict_["is_ichidan"] = 0
 
             return dict_
 
-def get_sentences_page1(word,forms,path):
-
-    # print(path)
+def get_sentences_page1(word,reading = None, forms=None,path="None"):
 
     english_identifier = """<span class="english">"""
 
@@ -106,10 +105,13 @@ def get_sentences_page1(word,forms,path):
         page = request_session.get(url)
         lines = page.text.splitlines()
 
+        sleep_time = 0
         while """<h1>We're sorry, but something went wrong.</h1>""" in lines[18] :
-            time.sleep(1)
+            sleep_time += 1
+            time.sleep(sleep_time)
             page = request_session.get(url)
             lines = page.text.splitlines()
+        sleep_time = 0
 
         with open(path, 'wb+') as f:
             f.write(page.content)
@@ -140,18 +142,31 @@ def get_sentences_page1(word,forms,path):
         if english_identifier in l:
             english = l
 
+            if forms is not None:
 
-            for form, inflected_verb in forms.items():
+                for form, inflected_verb in forms.items():
 
-                if inflected_verb in hiragana_sentence:
+                    if inflected_verb in hiragana_sentence:
+
+                        for exp in sentence_remove:
+                            english = english.replace(exp, "")
+
+                        sentence_list.append(kanji_sentence)
+                        english_list.append(english)
+                        form_list.append(form)
+                        break
+
+            else:
+                if reading in hiragana_sentence:
 
                     for exp in sentence_remove:
                         english = english.replace(exp, "")
 
                     sentence_list.append(kanji_sentence)
                     english_list.append(english)
-                    form_list.append(form)
-                    break
+
+
+
 
     return sentence_list, english_list, form_list
 
